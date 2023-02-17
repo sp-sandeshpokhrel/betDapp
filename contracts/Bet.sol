@@ -102,8 +102,13 @@ contract Bet is Ownable, ChainlinkClient {
     }
 
     function getUserBetArray(
-        uint _eventId
+        uint _eventId,
+        address account
     ) public view returns (Bets[] memory bets) {
-        return userBets[msg.sender][_eventId];
+        return userBets[account][_eventId];
+    }
+
+    function getEventIdArray() public view returns (uint[] memory) {
+        return eventsId;
     }
 }

@@ -1,4 +1,5 @@
 node_modules
+front_end
 .env
 coverage
 coverage.json
