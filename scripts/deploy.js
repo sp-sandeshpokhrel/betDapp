@@ -15,7 +15,7 @@ async function main() {
   await bet.deployed();
 
   console.log(
-    'Bet contract deployed'
+    'Bet contract deployed at ', bet.address
   );
 }
 
