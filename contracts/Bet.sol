@@ -22,6 +22,7 @@ contract Bet is Ownable, ChainlinkClient {
     struct Bets {
         uint amount;
         betType wld;
+        bool claimed;
     }
 
     //mapping(address => Bets[]) public userBets;
@@ -44,13 +45,19 @@ contract Bet is Ownable, ChainlinkClient {
     //c0fdd13cfcca4e308d0948cd1de7ef23--jobid
     function betNow(uint bet, uint _eventId) public payable {
         require(eventCheck[_eventId] == true, "Event is not initialized");
-        require(msg.value > 1000000000000000, "Minimum bet is 0.001 ETH");
+        require(msg.value >= 1000000000000000, "Minimum bet is 0.001 ETH");
         if (bet == uint(betType.WIN)) {
-            userBets[msg.sender][_eventId].push(Bets(msg.value, betType.WIN));
+            userBets[msg.sender][_eventId].push(
+                Bets(msg.value, betType.WIN, false)
+            );
         } else if (bet == uint(betType.DRAW)) {
-            userBets[msg.sender][_eventId].push(Bets(msg.value, betType.DRAW));
+            userBets[msg.sender][_eventId].push(
+                Bets(msg.value, betType.DRAW, false)
+            );
         } else if (bet == uint(betType.LOSE)) {
-            userBets[msg.sender][_eventId].push(Bets(msg.value, betType.LOSE));
+            userBets[msg.sender][_eventId].push(
+                Bets(msg.value, betType.LOSE, false)
+            );
         } else {
             revert("Bet type not valid");
         }
@@ -62,6 +69,7 @@ contract Bet is Ownable, ChainlinkClient {
         uint matchId
     ) public {
         require(eventCheck[matchId] == true, "Event is not initialized");
+        require(eventScore[matchId] == false, "Score is not fetched yet");
         Chainlink.Request memory req = buildChainlinkRequest(
             bytes32(abi.encodePacked(_jobId)),
             address(this),
@@ -86,8 +94,9 @@ contract Bet is Ownable, ChainlinkClient {
     }
 
     function claimBet(uint _event) public {
-        require(eventCheck[_event] = true, "Event is not registered");
-        require(eventScore[_event] = true, "Score is not fetched yet");
+        require(eventCheck[_event] == true, "Event is not registered");
+        require(eventScore[_event] == true, "Score is not fetched yet");
+
         Bets[] memory currentUserBets = userBets[msg.sender][_event];
         require(
             currentUserBets.length > 0,
@@ -96,6 +105,7 @@ contract Bet is Ownable, ChainlinkClient {
         for (uint i = 0; i < currentUserBets.length; i++) {
             if (uint(currentUserBets[i].wld) == score[_event]) {
                 payable(msg.sender).transfer(currentUserBets[i].amount);
+                userBets[msg.sender][_event][i].claimed = true;
             }
         }
         //check for the event if completed then distribute money accordingly
