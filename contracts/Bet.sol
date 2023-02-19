@@ -103,6 +103,7 @@ contract Bet is Ownable, ChainlinkClient {
             "No bets done or remain to claim by user"
         );
         for (uint i = 0; i < currentUserBets.length; i++) {
+            require(currentUserBets[i].claimed == false, "Already claimed");
             if (uint(currentUserBets[i].wld) == score[_event]) {
                 payable(msg.sender).transfer(currentUserBets[i].amount);
                 userBets[msg.sender][_event][i].claimed = true;
